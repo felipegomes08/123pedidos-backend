@@ -7,3 +7,4 @@ package-lock.json
 public
 dist
 build
+src/config/auth.json

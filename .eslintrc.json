@@ -1,0 +1,40 @@
+{
+  "env": {
+    "commonjs": true,
+    "es2021": true,
+    "node": true,
+    "jest": true
+  },
+  "extends": ["standard", "prettier"],
+  "parserOptions": {
+    "ecmaVersion": 12
+  },
+  "plugins": ["prettier", "eslint-plugin-import-helpers"],
+  "rules": {
+    "prettier/prettier": "error",
+    "space-before-function-paren": "off",
+    "react/prop-types": "off",
+    "import-helpers/order-imports": [
+      "error",
+      {
+        "newlinesBetween": "always",
+        "groups": ["/^react/", "module", "parent", "sibling", "index"],
+        "alphabetize": { "order": "asc", "ignoreCase": true }
+      }
+    ],
+    "comma-dangle": "off",
+    "semi": "error",
+    "import/no-duplicates": ["error", { "considerQueryString": true }],
+    "no-console": [
+      "warn",
+      {
+        "allow": ["warn", "error"]
+      }
+    ]
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

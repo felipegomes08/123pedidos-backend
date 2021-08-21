@@ -15,4 +15,4 @@ app.use(morgan('dev'))
 
 app.use(routes)
 
-app.listen(3333, () => console.log('running in port 3333'))
+app.listen(process.env.PORT || 3333, () => console.log('running in port 3333'))

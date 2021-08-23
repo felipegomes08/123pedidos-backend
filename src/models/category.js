@@ -4,7 +4,7 @@ const Category = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Nome da empresa é obrigatório'],
+      required: [true, 'Nome da categoria é obrigatório'],
       trim: true,
     },
     description: {

@@ -28,7 +28,6 @@ router.post('/login', async (req, res) => {
 
     return res.send({ empresa, token })
   } catch (error) {
-    console.log(error)
     return res.status(400).send({
       error: 'Erro ao validar suas credênciais',
     })
@@ -40,7 +39,7 @@ router.post('/cadastrar', async (req, res) => {
   try {
     const { name, username, password } = req.body
 
-    if (!(await empresaController.find({ username }))) {
+    if (await empresaController.findOne({ username })) {
       return res.status(400).send({
         error: 'Já existe um usuário cadastrado com esse nome',
       })
@@ -59,7 +58,6 @@ router.post('/cadastrar', async (req, res) => {
 
     return res.send(empresa)
   } catch (error) {
-    console.log(error)
     return res.status(400).send({
       error: 'Erro ao cadastrar o usuário',
     })

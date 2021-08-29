@@ -5,8 +5,7 @@ module.exports = {
   isActivatedEmpresa: async (req, res, next) => {
     try {
       const _id = req.idEmpresa
-
-      const existEmpresa = await empresaController.find({ _id })
+      const existEmpresa = await empresaController.findOne({ _id })
 
       if (existEmpresa && existEmpresa.active) {
         next()

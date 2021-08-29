@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs')
+
 const empresaModel = require('../models/empresa')
 
 const cardapioController = require('./cardapio')
@@ -7,8 +9,8 @@ class EmpresaController {
     return await empresaModel.find()
   }
 
-  async find(query) {
-    return await empresaModel.find(query)
+  async findOne(query) {
+    return await empresaModel.findOne(query)
   }
 
   async create(empresa) {
@@ -16,25 +18,25 @@ class EmpresaController {
   }
 
   async update(_id, empresa) {
-    return await empresaModel.findByIdAndUpdate(
+    const hash = await bcrypt.hash(empresa.password, 10)
+
+    empresa.password = hash
+
+    return await empresaModel.updateOne(
       { _id },
       {
-        active: empresa.active,
-        name: empresa.name,
-        username: empresa.username,
-        password: empresa.password,
+        $set: {
+          name: empresa.name,
+          username: empresa.username,
+          password: empresa.password,
+        },
       },
       { runValidators: true }
     )
   }
 
   async updateActive(_id, active) {
-    return await empresaModel.findByIdAndUpdate(
-      { _id },
-      {
-        active,
-      }
-    )
+    return await empresaModel.findByIdAndUpdate({ _id }, { $set: { active } })
   }
 
   async delete(id) {

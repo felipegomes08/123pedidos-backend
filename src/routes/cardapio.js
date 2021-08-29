@@ -1,7 +1,9 @@
 const express = require('express')
+const jwtToken = require('jsonwebtoken')
 
 const cardapioController = require('../controllers/cardapio')
-// const empresaController = require('../controllers/empresa')
+const categoryController = require('../controllers/category')
+const empresaController = require('../controllers/empresa')
 const authMiddleware = require('../middlewares/auth')
 const empresaMiddleware = require('../middlewares/empresa')
 
@@ -17,30 +19,24 @@ router.get('/cardapio', authMiddleware, empresaMiddleware.isAdmin, async (req, r
 
     return res.send(allCardapios)
   } catch (error) {
-    console.log(error)
     return res.status(400).send({
       error: 'Erro ao listar os cardápios',
     })
   }
 })
 
-router.get('/cardapio/:username', async (req, res) => {
+router.get('/cardapio/:idCardapio', async (req, res) => {
   try {
-    const username = req.params.username
+    const { idCardapio } = req.params
 
-    if (!username) {
+    const cardapio = await cardapioController.findOne({ _id: idCardapio })
+
+    if (!cardapio) {
       throw new Error('Não há nenhum cardápio cadastrado')
     }
 
-    const empresa = await cardapioController.find({ username })
-
-    // terminar
-    // if (empresa) {
-    //   const user = await empresaController.find({ username })
-    // }
-    return res.send(empresa)
+    return res.send(cardapio)
   } catch (error) {
-    console.log(error)
     return res.status(400).send({
       error: 'Erro ao buscar o cardápio',
     })
@@ -48,22 +44,40 @@ router.get('/cardapio/:username', async (req, res) => {
 })
 
 router.post(
-  '/cardapio',
+  '/cardapios',
   authMiddleware,
   empresaMiddleware.isActivatedEmpresa,
   async (req, res) => {
     try {
-      // const { name } = req.body
-      console.log(req.idEmpresa)
+      const { logo, banner, items } = req.body
+      const { authorization } = req.headers
 
-      // const empresa = await empresaController.find({ _id: req.idEmpresa });
-      // await cardapioController.create({ _id: username, cardapio });
+      const token = authorization.substring(7)
+
+      const tokenDecoded = jwtToken.decode(token)
+
+      const { id } = tokenDecoded
+
+      const empresa = await empresaController.findOne({ _id: id })
+
+      if (!empresa) return res.status(404).send({ error: 'Empresa não cadastrada' })
+
+      if (!items.length)
+        return res
+          .status(400)
+          .send({ error: 'Items são necessários para criar um Cardapio' })
+
+      for (const item of items) {
+        const category = await categoryController.findOne({ _id: item.idCategory })
+        if (!category) return res.status(404).send({ error: 'Categoria não cadastrada' })
+      }
+
+      await cardapioController.create({ _id: id, logo, banner, items })
 
       return res.send({
         message: 'Cardápio criado com sucesso',
       })
     } catch (error) {
-      console.log(error)
       return res.status(400).send({
         error: 'Erro ao cadastrar o cardápio',
       })
@@ -72,48 +86,39 @@ router.post(
 )
 
 router.post(
-  '/cardapio/category',
+  '/cardapios/items',
   authMiddleware,
   empresaMiddleware.isActivatedEmpresa,
   async (req, res) => {
     try {
-      const username = req.params.username
-      const { cardapio } = req.body
+      const { items } = req.body
+      const { authorization } = req.headers
 
-      // const empresa = await empresaController.find({ _id: req.idEmpresa })
-      console.log(req.idEmpresa)
-      await cardapioController.create({ _id: username, cardapio })
+      const token = authorization.substring(7)
 
-      return res.send({
-        message: 'Cardápio criado com sucesso',
-      })
-    } catch (error) {
-      console.log(error)
-      return res.status(400).send({
-        error: 'Erro ao cadastrar o cardápio',
-      })
-    }
-  }
-)
+      const tokenDecoded = jwtToken.decode(token)
 
-router.post(
-  '/cardapio/category/item',
-  authMiddleware,
-  empresaMiddleware.isActivatedEmpresa,
-  async (req, res) => {
-    try {
-      const username = req.params.username
-      const { cardapio } = req.body
+      const { id } = tokenDecoded
 
-      // const empresa = await empresaController.find({ _id: req.idEmpresa })
-      console.log(req.idEmpresa)
-      await cardapioController.create({ _id: username, cardapio })
+      const empresa = await empresaController.findOne({ _id: id })
+
+      if (!empresa) return res.status(404).send({ error: 'Empresa não cadastrada' })
+
+      if (!items.length)
+        return res.status(400).send({ error: 'Items do cardapio são obrigatórios' })
+
+      for (const item of items) {
+        const category = await categoryController.findOne({ _id: item.idCategory })
+
+        if (!category) return res.status(404).send({ error: 'Categoria não cadastrada' })
+      }
+
+      await cardapioController.pushItems(id, items)
 
       return res.send({
-        message: 'Cardápio criado com sucesso',
+        message: 'Items do Cardápio adicionados com sucesso',
       })
     } catch (error) {
-      console.log(error)
       return res.status(400).send({
         error: 'Erro ao cadastrar o cardápio',
       })
@@ -122,87 +127,79 @@ router.post(
 )
 
 router.put(
-  '/cardapio',
+  '/cardapios',
   authMiddleware,
   empresaMiddleware.isActivatedEmpresa,
   async (req, res) => {
     try {
-      const username = req.params.username
-      const { cardapio } = req.body
+      const { logo, banner } = req.body
+      const { authorization } = req.headers
 
-      // const empresa = await empresaController.find({ _id: req.idEmpresa })
-      console.log(req.idEmpresa)
-      await cardapioController.create({ _id: username, cardapio })
+      const token = authorization.substring(7)
+
+      const tokenDecoded = jwtToken.decode(token)
+
+      const { id } = tokenDecoded
+
+      const empresa = await empresaController.findOne({ _id: id })
+
+      if (!empresa) return res.status(404).send({ error: 'Empresa não cadastrada' })
+
+      await cardapioController.update(id, { logo, banner })
 
       return res.send({
-        message: 'Cardápio criado com sucesso',
+        message: 'Cardápio atualizado com sucesso',
       })
     } catch (error) {
-      console.log(error)
       return res.status(400).send({
-        error: 'Erro ao cadastrar o cardápio',
+        error: 'Erro ao atualizar o cardápio',
       })
     }
   }
 )
 
 router.put(
-  '/cardapio/category',
+  '/cardapios/items/:idItem',
   authMiddleware,
   empresaMiddleware.isActivatedEmpresa,
   async (req, res) => {
     try {
-      const username = req.params.username
-      const { cardapio } = req.body
+      const item = req.body
+      const { idItem } = req.params
+      const { authorization } = req.headers
 
-      // const empresa = await empresaController.find({ _id: req.idEmpresa })
-      console.log(req.idEmpresa)
-      await cardapioController.create({ _id: username, cardapio })
+      const token = authorization.substring(7)
 
-      return res.send({
-        message: 'Cardápio criado com sucesso',
-      })
-    } catch (error) {
-      console.log(error)
-      return res.status(400).send({
-        error: 'Erro ao cadastrar o cardápio',
-      })
-    }
-  }
-)
+      const tokenDecoded = jwtToken.decode(token)
 
-router.put(
-  '/cardapio/category/item',
-  authMiddleware,
-  empresaMiddleware.isActivatedEmpresa,
-  async (req, res) => {
-    try {
-      const username = req.params.username
-      const { cardapio } = req.body
+      const { id } = tokenDecoded
 
-      // const empresa = await empresaController.find({ _id: req.idEmpresa })
-      console.log(req.idEmpresa)
-      await cardapioController.create({ _id: username, cardapio })
+      const empresa = await empresaController.findOne({ _id: id })
+
+      if (!empresa) return res.status(404).send({ error: 'Empresa não cadastrada' })
+      if (!item)
+        return res.status(404).send({ error: 'Entre com todos os dados corretamente' })
+
+      await cardapioController.updateItemInCardapio(id, idItem, item)
 
       return res.send({
-        message: 'Cardápio criado com sucesso',
+        message: 'Item do Cardápio atualizado com sucesso',
       })
     } catch (error) {
-      console.log(error)
       return res.status(400).send({
-        error: 'Erro ao cadastrar o cardápio',
+        error: 'Erro ao atualizar item do cardápio',
       })
     }
   }
 )
 
 router.delete(
-  '/cardapio',
+  '/cardapios/:idCardapio',
   authMiddleware,
   empresaMiddleware.isActivatedEmpresa,
   async (req, res) => {
     try {
-      const { idCardapio } = req.body
+      const { idCardapio } = req.params
 
       const isDeleted = await cardapioController.delete(idCardapio)
 
@@ -214,7 +211,6 @@ router.delete(
         message: 'Cardápio deletado com sucesso',
       })
     } catch (error) {
-      console.log(error)
       return res.status(400).send({
         error: 'Erro ao cadastrar o cardápio',
       })
@@ -223,52 +219,32 @@ router.delete(
 )
 
 router.delete(
-  '/cardapio/category',
+  '/cardapios/items/:idItem',
   authMiddleware,
   empresaMiddleware.isActivatedEmpresa,
   async (req, res) => {
     try {
-      const { idCardapio } = req.body
+      const { idItem } = req.params
+      const { authorization } = req.headers
 
-      const isDeleted = await cardapioController.delete(idCardapio)
+      const token = authorization.substring(7)
 
-      if (!isDeleted) {
-        throw new Error('Erro ao deletar o cardápio')
-      }
+      const tokenDecoded = jwtToken.decode(token)
 
-      return res.send({
-        message: 'Cardápio deletado com sucesso',
-      })
-    } catch (error) {
-      console.log(error)
-      return res.status(400).send({
-        error: 'Erro ao cadastrar o cardápio',
-      })
-    }
-  }
-)
+      const { id } = tokenDecoded
 
-router.delete(
-  '/cardapio/category/item',
-  authMiddleware,
-  empresaMiddleware.isActivatedEmpresa,
-  async (req, res) => {
-    try {
-      const { idCardapio } = req.body
+      const empresa = await empresaController.findOne({ _id: id })
 
-      const isDeleted = await cardapioController.delete(idCardapio)
+      if (!empresa) return res.status(404).send({ error: 'Empresa não cadastrada' })
 
-      if (!isDeleted) {
-        throw new Error('Erro ao deletar o cardápio')
-      }
+      await cardapioController.deleteItemInCardapio(id, idItem)
 
       return res.send({
-        message: 'Cardápio deletado com sucesso',
+        message: 'Item do Cardápio deletado com sucesso',
       })
     } catch (error) {
-      console.log(error)
       return res.status(400).send({
-        error: 'Erro ao cadastrar o cardápio',
+        error: 'Erro ao deletar item do cardápio',
       })
     }
   }

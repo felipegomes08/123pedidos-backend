@@ -1,40 +1,50 @@
 const cardapioModel = require('../models/cardapio')
-
 class CadapioController {
   async findAll() {
     return await cardapioModel.find()
   }
 
-  async find(query) {
+  async findOne(query) {
     return await cardapioModel.findOne(query)
-  }
-
-  async createOrUpdate(cardapio) {
-    return await cardapioModel.create(cardapio)
   }
 
   async create(cardapio) {
     return await cardapioModel.create(cardapio)
   }
 
+  async pushItems(id, items) {
+    return await cardapioModel.updateOne({ _id: id }, { $push: { items } })
+  }
+
   async update(_id, cardapio) {
-    return await cardapioModel.findByIdAndUpdate(
+    return await cardapioModel.updateOne(
       { _id },
-      {
-        nameEmpresa: cardapio.nameEmpresa,
-        username: cardapio.username,
-        password: cardapio.password,
-      },
+      { $set: { logo: cardapio.logo, banner: cardapio.banner } },
       { runValidators: true }
     )
   }
 
-  async delete(id) {
-    return await cardapioModel.findByIdAndDelete(id)
+  async updateItemInCardapio(idCardapio, idItem, item) {
+    return await cardapioModel.updateOne(
+      { _id: idCardapio, 'items._id': idItem },
+      { $set: { 'items.$': item } },
+      { runValidators: true }
+    )
   }
 
-  async isActive(active) {
-    return await cardapioModel.findByIdAndDelete(active)
+  async delete(IdCardapio) {
+    return await cardapioModel.findByIdAndDelete(IdCardapio)
+  }
+
+  async deleteItemInCardapio(id, idItem) {
+    return await cardapioModel.updateOne(
+      { _id: id, 'items._id': idItem },
+      { $pull: { items: { _id: idItem } } }
+    )
+  }
+
+  async categoriesActive(id, idCategory) {
+    return await cardapioModel.find({ _id: id, 'items.idCategory': idCategory })
   }
 }
 

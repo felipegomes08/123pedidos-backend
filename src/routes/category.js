@@ -41,7 +41,7 @@ router.get(
       return res.send(category)
     } catch (error) {
       return res.status(400).send({
-        error: 'Erro ao buscar o usuário',
+        error: 'Erro ao buscar a Categória',
       })
     }
   }
@@ -60,7 +60,7 @@ router.post(
       return res.send({ message: 'Categoria criada com sucesso' })
     } catch (error) {
       return res.status(400).send({
-        error: 'Erro ao atualizar o status do usuário',
+        error: 'Erro ao criar uma categoria',
       })
     }
   }

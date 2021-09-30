@@ -46,6 +46,13 @@ class CadapioController {
   async categoriesActive(id, idCategory) {
     return await cardapioModel.find({ _id: id, 'items.idCategory': idCategory })
   }
+
+  async itemInCardapio(id, idItem) {
+    return await cardapioModel.find(
+      { _id: id, 'items._id': idItem },
+      { _id: 0, items: { $elemMatch: { _id: idItem } } }
+    )
+  }
 }
 
 module.exports = new CadapioController()

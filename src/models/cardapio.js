@@ -42,24 +42,9 @@ const cardapio = new mongoose.Schema(
           type: String,
           trim: true,
         },
-        options: {
-          multipleChoice: [
-            {
-              title: {},
-              description: {},
-              price: {},
-            },
-          ],
-          uniqueChoice: {},
-
-          // multipla escolha, com um limite predeterminado
-          // ou
-          // unica escolha
-          //
-          // titulo da opção obrigatório
-          //  nome obrigatório
-          //  descrição
-          //  valor da opção obrigatório
+        maxChoice: {
+          type: Number,
+          required: [false, 'Maximo de escolha é opcional'],
         },
       },
     ],
